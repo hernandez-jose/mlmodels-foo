@@ -4,12 +4,14 @@ import './App.css';
 
 // pages
 import Home from './pages/Home';
+import Sklearn from './pages/Sklearn';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />}/>
+        <Route path="/sklearn" element={<Sklearn />}/>
       </Routes>
     </BrowserRouter>
   );
