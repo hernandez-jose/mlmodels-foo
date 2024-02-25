@@ -1,3 +1,7 @@
 flask
 pymongo
 flask-cors
+# for testing ML code
+scikit-learn
+pandas
+numpy

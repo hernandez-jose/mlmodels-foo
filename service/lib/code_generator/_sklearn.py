@@ -8,17 +8,20 @@ from sklearn.model_selection import RandomizedSearchCV
 
 import pandas as pd
 import numpy as np
+from os import path
 
-training_data_location = './iris.csv'
+training_data_location = 'iris.csv'
 training_data_location_url = 'path'
 training_data_format = 'csv'
+target = 'variety'
+
 hyper_parameters = {
     'classifier__loss': ['log_loss', 'squared_epsilon_insensitive', 'modified_huber', 'hinge', 'perceptron', 'squared_error', 'huber', 'epsilon_insensitive', 'squared_hinge'], 
     'classifier__penalty': ['elasticnet', 'l2', 'l1', None], 
     'classifier__alpha': [269.9036136633546, 464.19718043058094, 237.47854538803725], 
     'classifier__l1_ratio': [0.6009733124333424, 0.07419289031337872, 0.9858239107960871], 
     'classifier__fit_intercept': [True, False], 
-    'classifier__max_iter': [50, 218, 427], 
+    'classifier__max_iter': [1000, 1100, 1427], 
     'classifier__tol': [244.0797036295096, 389.2976116098582, 217.09804994044634, None], 
     'classifier__shuffle': [True, False], 
     'classifier__epsilon': [476.3224422165881, 184.98039023725548, 481.3679706407656], 
@@ -36,11 +39,14 @@ hyper_parameters = {
 field_one_params = {}
 field_two_params = {}
 
+dir_path = path.dirname(path.realpath(__file__))
+training_data_location = path.join(dir_path, training_data_location)
+
 def reshape_to_2d(X):
     return np.array(X).reshape(-1, 1)
 
 # use for numbers
-field_one_num = Pipeline([
+sepal_length = Pipeline([
     ('reshape', FunctionTransformer(reshape_to_2d, validate=False)),
     # use scaler
     ('scaler', StandardScaler(**field_one_params))
@@ -52,24 +58,30 @@ field_two_text = Pipeline([
 ])
 
 transformers = [
-    ('field_one_num', field_one_num, 'field_one')
+    ('sepal.length_num', sepal_length, 'sepal.length'),
+    ('sepal.width_num', sepal_length, 'sepal.width')
 ]
 
 preprocessor = ColumnTransformer(
-    transformers=transformers
+    transformers=transformers,
+    remainder='drop'
 )
 pipeline = Pipeline([
     ('features', preprocessor),
     # use estimator
-    ('classifier', SGDClassifier(**hyper_parameters))
+    ('classifier', SGDClassifier())
 ])
 
 # load dataset
-with open("myfile.txt", "w") as file1:
-    file1.read()
+df = None
+with open(training_data_location, "r") as data:
+    df = pd.read_csv(data)
+print('data snippet')
+print(df)
 
 # hyper param tunner
 clf = RandomizedSearchCV(pipeline, hyper_parameters)
 
 # train
-search = clf.fit(iris.data, iris.target)
+search = clf.fit(df[['sepal.length', 'sepal.width']], df[target])
+print(pd.DataFrame.from_dict(search.cv_results_))
