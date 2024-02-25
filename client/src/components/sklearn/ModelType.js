@@ -1,18 +1,20 @@
 /* eslint-disable jsx-a11y/anchor-is-valid */
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {NavLink, useNavigate} from 'react-router-dom';
+import models from './data/Models';
 
-const ModelType = () => {
+const ModelType = ( {FieldUpdateAmount, setFieldUpdateAmount} ) => {
   // presistent data
   const [DataManagment, setDataManagment] = useState(() => {
   
     const defaultValues = {
       training_data_location_url: '',
-      radioOption: null,
+      radioOption: '',
       show_classification: 'd-none',
       show_regression: 'd-none',
       show_clustering: 'd-none',
-      data_format: ''
+      data_format: '',
+      test_data_split: '25'
     }
 
     // getting stored value
@@ -23,6 +25,18 @@ const ModelType = () => {
       return JSON.parse(saved)
     }
   });
+
+  useEffect(() => {
+    // code to run after render goes here s3Option
+    localStorage.setItem("ModelType", JSON.stringify(DataManagment));
+    localStorage.setItem("field_model_type", JSON.stringify(DataManagment.radioOption));
+    localStorage.setItem("field_data_format", JSON.stringify(DataManagment.data_format));
+    localStorage.setItem("field_training_data_location_url", JSON.stringify(DataManagment.training_data_location_url));
+    localStorage.setItem("field_test_data_split", JSON.stringify(DataManagment.test_data_split));
+    console.log('ModelType useEffect')
+    // training_data_location_url test_data_split
+  }, [DataManagment, FieldUpdateAmount]);
+
   const navigate = useNavigate();
 
   function handleOnChangeField(value, field){
@@ -41,8 +55,12 @@ const ModelType = () => {
       show_regression: value === 'regression' ? '' : 'd-none',
       show_clustering: value === 'clustering' ? '' : 'd-none'
     }
-    console.log(obj)
+    console.log('obj')
+    if(DataManagment.radioOption != null){
+      localStorage.setItem("ModelNameData", JSON.stringify(models[ DataManagment.radioOption ]) );
+    }
     setDataManagment(obj);
+    setFieldUpdateAmount(FieldUpdateAmount + 1)
   }
 
   function handleOnChangeDropdown(value, field){
@@ -63,7 +81,7 @@ const ModelType = () => {
   return (
     <>
         {/* <div className="card-body"> */}
-            <h4 htmlFor="check_form">Model Selection Type</h4>
+            <h4 htmlFor="check_form">Choose model type</h4>
             <div className='form-group'>
             <div className="form-check">
                 <input onChange={(e) => handleOnChangeOption(e.target.value)} checked={DataManagment.radioOption === "classification"} className="form-check-input" type="radio" id="classification" value="classification" name="model_type"  />
@@ -112,7 +130,8 @@ const ModelType = () => {
             </div>
             </div>
             <div className="mt-5 form-group">
-            <div className='col-3'>
+            <h4>Configure dataset</h4>
+            <div className='col mb-2'>
                 <label htmlFor="data_format">Training data format</label>
                 <select value={DataManagment.data_format} onChange={e => handleOnChangeDropdown(e.target.value, 'data_format')}  name="data_format" id="data_format" className="form-control">
                 <option value="csv">CSV</option>
@@ -122,17 +141,20 @@ const ModelType = () => {
                 <option value="images">jpeg, jpg, and png in ZIP archive file format</option>
                 </select>
             </div>
-            <div className="col-6">
-                <label htmlFor="training_data_location_url">Training data URL (Dropbox, Google, or any share URL)</label>
+            <div className="col mb-2">
+                <label htmlFor="training_data_location_url">Training data URL (local path or public URL)</label>
                 <input type="text" className="form-control" value={DataManagment.training_data_location_url} onChange={e => handleOnChangeField(e.target.value, 'training_data_location_url')} id="training_data_location_url" placeholder="Training data location URL" />
             </div>
-            <div className='col'>
-                <NavLink onClick={handelOnSubmit} className="btn btn-success mt-2" to='/ml-trainer/preprocessing'>Next step</NavLink>
+            <div className="col">
+                <label htmlFor="test_data_split">Test dataset size in % (the rest is used for training)</label>
+                <input type="text" className="form-control" value={DataManagment.test_data_split} onChange={e => handleOnChangeField(e.target.value, 'test_data_split')} id="test_data_split" placeholder="25" />
             </div>
+            
             </div>
         {/* </div> */}
     </>
   );
+
 };
 
 export default ModelType;
